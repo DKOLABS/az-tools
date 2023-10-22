@@ -1,5 +1,5 @@
-$ClientSecretCredential = Get-Credential -Credential "INSERT_CLIENT_ID"
-Connect-MgGraph -TenantId "INSERT_TENAT_ID" -ClientSecretCredential $ClientSecretCredential -NoWelcome
+$ClientSecretCredential = Get-Credential -Credential ""
+Connect-MgGraph -TenantId "" -ClientSecretCredential $ClientSecretCredential -NoWelcome
 # Fetch conditional access policies
 $policies = Get-MgIdentityConditionalAccessPolicy
 
@@ -33,6 +33,9 @@ $htmlContent = @"
         .policy h3.conditions {
             margin-top: 20px; /* Added margin for space */
         }
+        .policy h3.grant-controls {
+            margin-top: 20px; /* Added margin for space */
+        }
         .policy h3.collapsed::before {
             content: '\002B'; /* Plus sign when collapsed */
             margin-right: 10px;
@@ -52,6 +55,13 @@ $htmlContent = @"
             border-radius: 15px; /* Bubbled border for the content */
             border: 1px solid #f2f2f2;
         }
+        .sub-section {
+            margin-left: 20px;
+        }
+        .sub-header {
+            margin-top: 10px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -68,6 +78,10 @@ $htmlContent = @"
             content.style.display = "block";
             element.classList.remove("collapsed");
             element.classList.add("expanded");
+        }
+        // Prevent the event from bubbling up to parent elements
+        if (event) {
+            event.stopPropagation();
         }
     }
 </script>
@@ -119,6 +133,47 @@ foreach ($policy in $policies) {
                     <tr>
                         <td>Sign-in Risk Levels</td>
                         <td>$($policy.conditions.signInRiskLevels -join ', ')</td>
+                    </tr>
+                </table>
+                <br>
+                <h3 class="collapsed sub-header" onclick="toggleContent(this, event)">Users</h3>
+                <div class="content sub-section">
+                    <table>
+                        <tr>
+                            <th>Attribute</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Include Users</td>
+                            <td>$($policy.conditions.users.includeUsers -join ', ')</td>
+                        </tr>
+                        <tr>
+                            <td>Exclude Users</td>
+                            <td>$($policy.conditions.users.excludeUsers -join ', ')</td>
+                        </tr>
+                        <!-- You can continue with other attributes of 'conditions.users' as needed -->
+                    </table>
+                </div>
+            </div>
+            <br>
+            <h3 class="collapsed grant-controls" onclick="toggleContent(this)">Grant Controls</h3>
+            <div class="content">
+                <table>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>Operator</td>
+                        <td>$($policy.grantControls.operator)</td>
+                    </tr>
+                    <tr>
+                        <td>Built-In Controls</td>
+                        <td>$($policy.grantControls.builtInControls -join ', ')</td>
+                    </tr>
+                    <tr>
+                        <td>Custom Controls</td>
+                        <td>$($policy.grantControls.customControls -join ', ')</td>
                     </tr>
                 </table>
             </div>
